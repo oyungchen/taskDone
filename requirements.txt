@@ -1,0 +1,9 @@
+# Task Manager - Requirements
+# This application uses only Python standard library modules:
+# - tkinter (GUI)
+# - json (data storage)
+# - datetime (timestamp handling)
+# - pathlib (file operations)
+
+# No additional packages required!
+# Just make sure tkinter is installed with your Python distribution.

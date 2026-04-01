@@ -1,63 +1,82 @@
+# Task Manager
 
-## ✨ Features
+A desktop task management application with a Kanban-style board interface.
 
-* ➕ Add new tasks
-* ✅ Mark tasks as complete/incomplete
-* 🗑 Delete selected tasks
-* 🧹 Clear all tasks at once
-* 🕒 Timestamp for each task
-* 💾 Automatic saving using JSON file
-* 🔄 Persistent data (tasks remain after closing app)
-* 📜 Scrollable task list
-* 🎨 Clean and minimal UI
+## Features
 
-## 🛠 Technologies Used
+- **Kanban Board**: Three columns (Pending, Processing, Done) for task organization
+- **Drag & Drop**: Move tasks between columns by clicking to change status
+- **Date Filtering**: View tasks by date range (defaults to current week)
+- **Priority Levels**: High (red), Medium (orange), Low (green) with color coding
+- **Persistent Storage**: Tasks saved locally in JSON files
 
-* Python
-* Tkinter (GUI)
-* JSON (Data Storage)
-* Datetime module
+## Screenshots
 
-## 📂 How It Works
+*To be added*
 
-* Tasks are stored in a `tasks.json` file
-* Each task contains:
+## Installation
 
-  * Task text
-  * Completion status
-  * Time added
-* Data is automatically saved whenever changes are made
+### Requirements
+- Python 3.x with tkinter support
 
-## ▶️ How to Run
+### Quick Start
 
 ```bash
-python task_manager.py
+# Clone or download the repository
+git clone <repository-url>
+cd task-manager
+
+# Run the application
+python main.py
+
+# Or use the launcher script (macOS/Linux)
+./run.sh
 ```
 
-## 📸 UI Highlights
+### Installing tkinter
 
-* Simple task input field
-* Task list with completion indicators
-* Action buttons for task management
-* Status messages for user feedback
+**macOS:**
+```bash
+brew install python-tk
+```
 
-## 🎯 Purpose
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install python3-tk
+```
 
-This project demonstrates:
+**Fedora:**
+```bash
+sudo dnf install python3-tkinter
+```
 
-* GUI development using Tkinter
-* File handling with JSON
-* Event-driven programming
-* Basic data structure handling in Python
+## Usage
 
-## 📌 Future Improvements
+1. **Adding Tasks**: Click the "+ New Task" button or use File → New Task (Ctrl+N)
+2. **Moving Tasks**: Click on a task to open details, then use the "Move to..." buttons
+3. **Editing/Deleting**: Open task details to delete a task
+4. **Date Navigation**: Use the date controls to view tasks from different weeks
 
-* Edit task feature
-* Priority levels
-* Due dates
-* Dark mode
-* Search functionality
+## File Structure
 
----
+```
+task-manager/
+├── main.py          # Application entry point
+├── app.py           # Main application window
+├── gui.py           # GUI components (Kanban columns, cards)
+├── models.py        # Data models (Task, enums)
+├── storage.py       # File-based storage
+├── tasks/           # Task data directory
+│   ├── pending.json
+│   ├── processing.json
+│   └── done.json
+└── run.sh           # Launcher script
+```
 
-💡 A lightweight productivity tool built for learning and everyday task management.
+## License
+
+MIT License - see LICENSE file for details.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
