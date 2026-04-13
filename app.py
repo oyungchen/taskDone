@@ -39,7 +39,7 @@ class TaskManagerApp:
         # File menu
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="New Task", command=self.show_add_task_dialog, accelerator="Ctrl+N")
+        file_menu.add_command(label="新建任务", command=self.show_add_task_dialog, accelerator="Ctrl+N")
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.quit)
 
@@ -55,16 +55,15 @@ class TaskManagerApp:
 
     def create_toolbar(self):
         """Create toolbar with quick actions"""
-        toolbar = tk.Frame(self.root, bg="#e0e0e0", relief="raised", bd=1)
+        toolbar = tk.Frame(self.root, bg="#f5f5f5", relief="raised", bd=1)
         toolbar.pack(fill="x", padx=5, pady=5)
 
         # Add task button
         add_btn = tk.Button(
             toolbar,
-            text="+ New Task",
+            text="+ 新建任务",
             font=("Arial", 10, "bold"),
             bg="#4CAF50",
-            fg="white",
             command=self.show_add_task_dialog
         )
         add_btn.pack(side="left", padx=5, pady=5)
@@ -72,7 +71,7 @@ class TaskManagerApp:
         # Refresh button
         refresh_btn = tk.Button(
             toolbar,
-            text="Refresh",
+            text="刷新",
             font=("Arial", 10),
             command=self.refresh_board
         )
@@ -86,7 +85,7 @@ class TaskManagerApp:
         # Previous week button
         prev_btn = tk.Button(
             date_frame,
-            text="← Previous Week",
+            text="← 上周",
             font=("Arial", 9),
             command=self.prev_week
         )
@@ -104,7 +103,7 @@ class TaskManagerApp:
         # Next week button
         next_btn = tk.Button(
             date_frame,
-            text="Next Week →",
+            text="下周 →",
             font=("Arial", 9),
             command=self.next_week
         )
@@ -113,10 +112,9 @@ class TaskManagerApp:
         # Today button
         today_btn = tk.Button(
             date_frame,
-            text="Today",
+            text="今天",
             font=("Arial", 9, "bold"),
             bg="#2196F3",
-            fg="white",
             command=self.go_to_today
         )
         today_btn.pack(side="right", padx=5)
@@ -140,28 +138,31 @@ class TaskManagerApp:
         self.columns_frame = tk.Frame(self.board_canvas, bg="#f5f5f5")
         self.board_canvas.create_window((0, 0), window=self.columns_frame, anchor="nw")
 
-        # Create three columns
+        # Create three columns (without emoji to avoid display issues)
         self.pending_column = KanbanColumn(
             self.columns_frame,
-            "📋 Pending",
+            "[待处理]",
             TaskStatus.PENDING,
-            bg_color="#fff8e1"
+            bg_color="#fff8e1",
+            on_drop=lambda task: self._on_task_drop(task, TaskStatus.PENDING)
         )
         self.pending_column.pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
         self.processing_column = KanbanColumn(
             self.columns_frame,
-            "🔄 Processing",
+            "[进行中]",
             TaskStatus.PROCESSING,
-            bg_color="#e3f2fd"
+            bg_color="#e3f2fd",
+            on_drop=lambda task: self._on_task_drop(task, TaskStatus.PROCESSING)
         )
         self.processing_column.pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
         self.done_column = KanbanColumn(
             self.columns_frame,
-            "✅ Done",
+            "[已完成]",
             TaskStatus.DONE,
-            bg_color="#e8f5e9"
+            bg_color="#e8f5e9",
+            on_drop=lambda task: self._on_task_drop(task, TaskStatus.DONE)
         )
         self.done_column.pack(side="left", fill="both", expand=True, padx=5, pady=5)
 
@@ -245,19 +246,22 @@ class TaskManagerApp:
                 self.pending_column.add_task(
                     task,
                     on_click=self.on_task_click,
-                    on_drag=self.on_task_drag
+                    on_drag=self.on_task_drag,
+                    on_drag_end=self.on_task_drag_end
                 )
             elif task.status == TaskStatus.PROCESSING.value:
                 self.processing_column.add_task(
                     task,
                     on_click=self.on_task_click,
-                    on_drag=self.on_task_drag
+                    on_drag=self.on_task_drag,
+                    on_drag_end=self.on_task_drag_end
                 )
             elif task.status == TaskStatus.DONE.value:
                 self.done_column.add_task(
                     task,
                     on_click=self.on_task_click,
-                    on_drag=self.on_task_drag
+                    on_drag=self.on_task_drag,
+                    on_drag_end=self.on_task_drag_end
                 )
 
         # Update counts
@@ -335,7 +339,6 @@ class TaskManagerApp:
             text="Save Task",
             font=("Arial", 10, "bold"),
             bg="#4CAF50",
-            fg="white",
             command=save_task
         ).pack(side="right", padx=5)
 
@@ -346,10 +349,48 @@ class TaskManagerApp:
         """Handle task card click"""
         self.show_task_details(task)
 
-    def on_task_drag(self, task: Task, event):
-        """Handle task card drag start"""
-        # Simple drag implementation - could be enhanced with full drag-drop
+    def on_task_drag(self, task: Task):
+        """Handle task card drag start - mark task as being dragged"""
         self.dragged_task = task
+        # Change cursor to indicate dragging
+        self.root.config(cursor="fleur")
+        # Store reference to source card for ghost cleanup
+        self.drag_source_card = None
+
+    def on_task_drag_end(self, task: Task):
+        """Handle task card drag end - cleanup"""
+        # Reset cursor
+        self.root.config(cursor="")
+        # Clean up ghost window if exists
+        if hasattr(self, 'drag_source_card') and self.drag_source_card:
+            # Find the card widget and destroy its ghost
+            for column in [self.pending_column, self.processing_column, self.done_column]:
+                for child in column.task_frame.winfo_children():
+                    if isinstance(child, TaskCard) and child.task.id == task.id:
+                        child.destroy_ghost()
+                        break
+        self.drag_source_card = None
+
+    def _on_task_drop(self, task: Task, target_status: TaskStatus):
+        """Handle task drop on a column"""
+        # Reset cursor
+        self.root.config(cursor="")
+
+        if not self.dragged_task:
+            return
+
+        # Only move if status changed
+        if self.dragged_task.status == target_status.value:
+            self.dragged_task = None
+            return
+
+        # Move the task
+        if self.storage.move_task(self.dragged_task, target_status.value):
+            self.refresh_board()
+        else:
+            messagebox.showerror("Error", "Failed to move task.")
+
+        self.dragged_task = None
 
     def show_task_details(self, task: Task):
         """Show task details dialog"""
